@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Viva Insights Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+        .card { 
+            background-color: white; 
+            border-radius: 0.75rem; 
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1); 
+            border: 1px solid #e2e8f0; 
+            transition: all 0.2s ease-in-out;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
+        }
+        .stat-box {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            text-align: center;
+        }
+        .stat-card {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+        }
+        .stat-card-icon {
+            flex-shrink: 0;
+            width: 3rem;
+            height: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.5rem;
+        }
+    </style>
+</head>
+<body class="p-8">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-extrabold text-slate-800">Core Concepts Demonstration</h1>
+            <p class="text-slate-600 mt-2">A focused dashboard for mid-term viva presentation.</p>
+        </header>
+
+        <!-- Upload Section -->
+        <div class="card p-6 mb-10">
+            <form id="upload-form" class="flex flex-col sm:flex-row items-center gap-4">
+                <input type="file" id="file-input" name="file" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-5 file:rounded-lg file:border-0 file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer"/>
+                <button type="submit" class="w-full sm:w-auto bg-indigo-600 text-white font-bold py-2.5 px-6 rounded-lg hover:bg-indigo-700 transition-all">Analyze</button>
+            </form>
+            <div id="loading" class="hidden text-center mt-6"><div class="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto"></div><p class="text-indigo-600 mt-3 font-semibold">Analyzing data...</p></div>
+            <div id="error" class="hidden text-red-700 bg-red-100 p-4 rounded-lg mt-6 font-medium"></div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results" class="hidden space-y-8">
+
+            <!-- Top Level KPIs -->
+            <div class="card p-6">
+                <h3 class="text-xl font-bold text-slate-800 mb-4 text-center">Key Performance Indicators</h3>
+                <div class="space-y-4">
+                    <div id="top-category-stat" class="stat-card"></div>
+                    <div id="top-region-stat" class="stat-card"></div>
+                    <div id="avg-rating-stat" class="stat-card"></div>
+                </div>
+            </div>
+
+            <!-- Sentiment Analysis Row -->
+            <div class="card p-6 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <div class="flex flex-col items-center">
+                    <h3 class="text-xl font-bold text-slate-800 mb-4">Sentiment Analysis</h3>
+                    <img id="sentiment-pie-chart" src="" alt="Sentiment Pie Chart" class="max-w-xs mx-auto h-auto"/>
+                    <div id="sentiment-stats" class="w-full mt-6 grid grid-cols-1 sm:grid-cols-3 gap-2"></div>
+                </div>
+                 <div class="flex flex-col">
+                    <h3 class="text-xl font-bold text-slate-800 mb-4">Key Trends from Negative Reviews</h3>
+                    <div id="trends-list" class="space-y-2"></div>
+                </div>
+            </div>
+
+            <!-- Profit Over Time Row -->
+            <div class="card p-6 flex flex-col items-center">
+                 <h3 class="text-xl font-bold text-slate-800 mb-4">Historical Profit</h3>
+                <img id="profit-time-chart" src="" alt="Profit Over Time Chart" class="max-w-full h-auto"/>
+                <div id="profit-stats" class="w-full mt-6 grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
+
+            <!-- Profit Forecast Row -->
+            <div class="card p-6 flex flex-col items-center">
+                <h3 class="text-xl font-bold text-slate-800 mb-4">Profit Forecast</h3>
+                <img id="profit-forecast-chart" src="" alt="Profit Forecast Chart" class="max-w-full h-auto"/>
+                <div id="profit-forecast-stats" class="w-full mt-6 grid grid-cols-1 md:grid-cols-1 gap-4"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('upload-form').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const fileInput = document.getElementById('file-input');
+            const file = fileInput.files[0];
+            const loadingDiv = document.getElementById('loading');
+            const errorDiv = document.getElementById('error');
+            const resultsDiv = document.getElementById('results');
+
+            if (!file) {
+                errorDiv.textContent = 'Please select a file to analyze.';
+                errorDiv.classList.remove('hidden'); return;
+            }
+
+            loadingDiv.classList.remove('hidden');
+            errorDiv.classList.add('hidden');
+            resultsDiv.classList.add('hidden');
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/analyze', { method: 'POST', body: formData });
+                const data = await response.json();
+
+                console.log('Server response:', data);
+
+                if (!response.ok) {
+                    throw new Error(data.error || `Server responded with status: ${response.status}`);
+                }
+                if (!data || typeof data.charts !== 'object' || typeof data.summary_stats !== 'object') {
+                    throw new Error(`Invalid response structure from server. Check console for details.`);
+                }
+                
+                // Update charts
+                document.getElementById('sentiment-pie-chart').src = 'data:image/png;base64,' + data.charts.sentiment_pie;
+                document.getElementById('profit-time-chart').src = 'data:image/png;base64,' + data.charts.profit_time;
+                document.getElementById('profit-forecast-chart').src = 'data:image/png;base64,' + data.charts.profit_forecast;
+
+                // Update stats
+                const stats = data.summary_stats;
+                document.getElementById('sentiment-stats').innerHTML = `
+                    <div class="stat-box"><p class="text-sm text-slate-500">Positive</p><p class="text-lg font-bold text-green-600">${stats.positive_count} (${stats.positive_pct})</p></div>
+                    <div class="stat-box"><p class="text-sm text-slate-500">Negative</p><p class="text-lg font-bold text-red-600">${stats.negative_count} (${stats.negative_pct})</p></div>
+                    <div class="stat-box"><p class="text-sm text-slate-500">Neutral</p><p class="text-lg font-bold text-slate-600">${stats.neutral_count} (${stats.neutral_pct})</p></div>
+                `;
+                document.getElementById('profit-stats').innerHTML = `
+                    <div class="stat-box"><p class="text-sm text-slate-500">Total Profit</p><p class="text-2xl font-bold text-slate-800">${stats.total_profit}</p></div>
+                    <div class="stat-box"><p class="text-sm text-slate-500">Avg. Monthly Profit</p><p class="text-2xl font-bold text-slate-800">${stats.avg_monthly_profit}</p></div>
+                `;
+                document.getElementById('profit-forecast-stats').innerHTML = `
+                     <div class="stat-box"><p class="text-sm text-slate-500">Predicted Profit Next Month</p><p class="text-2xl font-bold text-indigo-600">${stats.next_month_profit}</p></div>
+                `;
+                document.getElementById('top-category-stat').innerHTML = `<div class="stat-card-icon bg-indigo-100 text-indigo-600"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" x2="12" y1="22.08" y2="12"/></svg></div><div><p class="text-sm text-slate-500">Top Category (Profit)</p><p class="text-lg font-bold text-slate-800">${stats.top_category}</p></div>`;
+                document.getElementById('top-region-stat').innerHTML = `<div class="stat-card-icon bg-green-100 text-green-600"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div><div><p class="text-sm text-slate-500">Top Region (Sales)</p><p class="text-lg font-bold text-slate-800">${stats.top_region}</p></div>`;
+                document.getElementById('avg-rating-stat').innerHTML = `<div class="stat-card-icon bg-yellow-100 text-yellow-600"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div><div><p class="text-sm text-slate-500">Overall Avg. Rating</p><p class="text-lg font-bold text-slate-800">${stats.avg_rating}</p></div>`;
+
+                // Update Key Trends
+                const trendsList = document.getElementById('trends-list');
+                trendsList.innerHTML = '';
+                if (data.trends && data.trends.length > 0) {
+                    data.trends.forEach(trend => {
+                        trendsList.innerHTML += `<div class="bg-slate-100 p-2 rounded-md text-slate-700 text-sm font-medium">${trend}</div>`;
+                    });
+                } else {
+                    trendsList.innerHTML = '<p class="text-slate-500 text-sm">No significant trends found in negative reviews.</p>';
+                }
+
+                resultsDiv.classList.remove('hidden');
+            } catch (error) {
+                errorDiv.textContent = 'Error: ' + error.message;
+                errorDiv.classList.remove('hidden');
+            } finally {
+                loadingDiv.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
