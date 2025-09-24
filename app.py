@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import nltk
 from flask import Flask, request, jsonify, render_template
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.svm import LinearSVC
 from sklearn.linear_model import LinearRegression 
 from nltk.corpus import stopwords
@@ -143,22 +143,27 @@ def analyze_data():
             'profit_forecast': profit_forecast_chart,
         }
         
-        # Calculate summary statistics
+        # --- FIX: Use CountVectorizer for more accurate trends ---
+        negative_reviews = df_user[df_user['predicted_sentiment'] == 'Negative']['cleaned_review']
+        trends = []
+        if not negative_reviews.empty and negative_reviews.str.strip().astype(bool).any():
+            try:
+                # Use CountVectorizer to find most frequent terms (uni-grams and bi-grams)
+                c_vec = CountVectorizer(ngram_range=(1, 2), stop_words='english', max_features=10)
+                counts = c_vec.fit_transform(negative_reviews)
+                sum_words = counts.sum(axis=0) 
+                words_freq = [(word, sum_words[0, idx]) for word, idx in c_vec.vocabulary_.items()]
+                words_freq = sorted(words_freq, key = lambda x: x[1], reverse=True)
+                trends = [word for word, freq in words_freq[:10]]
+            except ValueError:
+                trends = []
+
         sentiment_counts = df_user['predicted_sentiment'].value_counts()
         total_reviews = len(df_user)
         total_profit = df_user['net_profit'].sum()
         df_user['purchase_date'] = pd.to_datetime(df_user['purchase_date'])
         monthly_profit = df_user.set_index('purchase_date').resample('ME')['net_profit'].sum()
-
-        negative_reviews = df_user[df_user['predicted_sentiment'] == 'Negative']['cleaned_review']
-        trends = []
-        if not negative_reviews.empty and negative_reviews.str.strip().astype(bool).any():
-            try:
-                trend_vectorizer = TfidfVectorizer(max_features=10, ngram_range=(1,2)).fit(negative_reviews)
-                trends = trend_vectorizer.get_feature_names_out().tolist()
-            except ValueError:
-                trends = []
-
+        
         category_profit = df_user.groupby('product_category')['net_profit'].sum()
         top_category = category_profit.idxmax() if not category_profit.empty else "N/A"
         top_category_profit = category_profit.max() if not category_profit.empty else 0

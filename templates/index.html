@@ -48,14 +48,14 @@
 </head>
 <body class="p-8">
     <div class="max-w-4xl mx-auto">
-        <!-- Header -->
         <header class="text-center mb-10">
-            <h1 class="text-4xl font-extrabold text-slate-800">Core Concepts Demonstration</h1>
-            <p class="text-slate-600 mt-2">A focused dashboard for mid-term viva presentation.</p>
+            <h1 class="text-4xl font-extrabold text-slate-800">Buisness Insights Dashboard</h1>
         </header>
 
-        <!-- Upload Section -->
         <div class="card p-6 mb-10">
+            <h2 class="text-2xl font-bold text-slate-800 mb-4 text-center">Upload Your Data</h2>
+            <p class="text-center" style="color: #6c757d;">CSV Format : product_name,product_category,review,rating,net_profit,units_sold,purchase_date,region</p>
+            <br/>
             <form id="upload-form" class="flex flex-col sm:flex-row items-center gap-4">
                 <input type="file" id="file-input" name="file" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-5 file:rounded-lg file:border-0 file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer"/>
                 <button type="submit" class="w-full sm:w-auto bg-indigo-600 text-white font-bold py-2.5 px-6 rounded-lg hover:bg-indigo-700 transition-all">Analyze</button>
@@ -64,10 +64,7 @@
             <div id="error" class="hidden text-red-700 bg-red-100 p-4 rounded-lg mt-6 font-medium"></div>
         </div>
 
-        <!-- Results Section -->
         <div id="results" class="hidden space-y-8">
-
-            <!-- Top Level KPIs -->
             <div class="card p-6">
                 <h3 class="text-xl font-bold text-slate-800 mb-4 text-center">Key Performance Indicators</h3>
                 <div class="space-y-4">
@@ -77,7 +74,6 @@
                 </div>
             </div>
 
-            <!-- Sentiment Analysis Row -->
             <div class="card p-6 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
                 <div class="flex flex-col items-center">
                     <h3 class="text-xl font-bold text-slate-800 mb-4">Sentiment Analysis</h3>
